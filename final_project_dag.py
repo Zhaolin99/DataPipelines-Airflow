@@ -28,11 +28,17 @@ with DAG('dag-zh',
 
     def final_project():
 
-        create_trips_table = PostgresOperator(
-          task_id="create_tables",
+        create_songs = PostgresOperator(
+          task_id="create_songs",
           postgres_conn_id="redshift",
-          sql=final_project_sql_statements.create_tables
-      )
+          sql=sql_.create_staging_songs
+        )
+
+        create_events = PostgresOperator(
+          task_id="create_events",
+          postgres_conn_id="redshift",
+          sql=sql_.create_staging_events
+        )
 
 
         start_operator = DummyOperator(task_id='Begin_execution')
@@ -106,7 +112,7 @@ with DAG('dag-zh',
         end_operator = DummyOperator(task_id='Stop_execution')
 
         
-        create_tables >> start_operator
+        create_songs >>  create_events >> start_operator
         start_operator >> stage_events_to_redshift
         start_operator >> stage_songs_to_redshift
         stage_events_to_redshift >> load_songplays_table
