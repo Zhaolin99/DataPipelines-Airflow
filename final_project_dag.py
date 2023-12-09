@@ -35,7 +35,7 @@ with DAG('dag-zh',
           sql=create_tables_sql
       )
 
-      
+
         start_operator = DummyOperator(task_id='Begin_execution')
         stage_events_to_redshift = StageToRedshiftOperator(
             task_id='Stage_events',
@@ -43,7 +43,7 @@ with DAG('dag-zh',
             aws_credentials_id='aws_credentials',
             table='staging_events',
             s3_bucket='s3://udacity-dend/log_data',
-            json_path='auto',
+            json_path='s3://udacity-dend/log_json_path.json',
             region = 'us-west-2'
         )
         stage_songs_to_redshift = StageToRedshiftOperator(
