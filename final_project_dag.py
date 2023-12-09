@@ -44,7 +44,7 @@ with DAG('dag-zh',
             table='staging_events',
             s3_bucket='s3://udacity-dend/log_data',
             json_path='auto',
-            region = 'us-east-1'
+            region = 'us-west-2'
         )
         stage_songs_to_redshift = StageToRedshiftOperator(
             task_id='Stage_songs',
@@ -53,7 +53,7 @@ with DAG('dag-zh',
             table='staging_songs',
             s3_bucket='s3://udacity-dend/song_data',
             json_path='auto',
-            region = 'us-east-1'
+            region = 'us-west-2'
         )
 
 
@@ -71,7 +71,7 @@ with DAG('dag-zh',
             redshift_conn_id="redshift",
             table="users",
             sql_query=final_project_sql_statements.user_table_insert,
-            append_data=False
+            append_data=True
 
         )
         load_song_dimension_table = LoadDimensionOperator(
@@ -79,7 +79,7 @@ with DAG('dag-zh',
             redshift_conn_id="redshift",
             table="songs",
             sql_query=final_project_sql_statements.song_table_insert,
-            append_data=False
+            append_data=True
 
         )
         load_artist_dimension_table = LoadDimensionOperator(
@@ -87,7 +87,7 @@ with DAG('dag-zh',
             redshift_conn_id="redshift",
             table="artists",
             sql_query=final_project_sql_statements.artist_table_insert,
-            append_data=False
+            append_data=True
 
         )
         load_time_dimension_table = LoadDimensionOperator(
@@ -95,7 +95,7 @@ with DAG('dag-zh',
             redshift_conn_id="redshift",
             table="time",
             sql_query=final_project_sql_statements.time_table_insert,
-            append_data=False
+            append_data=True
         )
 
         run_quality_checks = DataQualityOperator(
