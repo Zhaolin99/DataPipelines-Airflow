@@ -2,13 +2,17 @@ from datetime import datetime, timedelta
 import pendulum
 import os
 from airflow.decorators import dag
+
 from airflow.operators.dummy_operator import DummyOperator
 from final_project_operators.stage_redshift import StageToRedshiftOperator
 from final_project_operators.load_fact import LoadFactOperator
 from final_project_operators.load_dimension import LoadDimensionOperator
 from final_project_operators.data_quality import DataQualityOperator
-from udacity.common import final_project_sql_statements, create_tables
+
+from airflow.operators.postgres_operator import PostgresOperator
+from udacity.common import final_project_sql_statements as sql_
 from airflow import DAG 
+
 default_args = {
     'owner': 'airflow-zh',
     'depends_on_past': False,
@@ -40,6 +44,16 @@ with DAG('dag-zh',
           sql=sql_.create_staging_events
         )
 
+        create_tables = PostgresOperator(
+          task_id="create_tables",
+          postgres_conn_id="redshift",
+          sql=[sql_.create_songplays,
+            sql_.create_artists,
+            sql_.create_songs,
+            sql_.create_users,
+            sql_.create_time,
+          ]
+        )
 
         start_operator = DummyOperator(task_id='Begin_execution')
         stage_events_to_redshift = StageToRedshiftOperator(
@@ -66,7 +80,7 @@ with DAG('dag-zh',
             task_id='Load_songplays_fact_table',
             redshift_conn_id="redshift",
             table="songplays",
-            sql_query=final_project_sql_statements.songplay_table_insert,
+            sql_query=sql_.songplay_table_insert,
             append_data=True
         )
 
@@ -75,7 +89,7 @@ with DAG('dag-zh',
             task_id='Load_user_dim_table',
             redshift_conn_id="redshift",
             table="users",
-            sql_query=final_project_sql_statements.user_table_insert,
+            sql_query=sql_.user_table_insert,
             append_data=True
 
         )
@@ -83,7 +97,7 @@ with DAG('dag-zh',
             task_id='Load_song_dim_table',
             redshift_conn_id="redshift",
             table="songs",
-            sql_query=final_project_sql_statements.song_table_insert,
+            sql_query=sql_.song_table_insert,
             append_data=True
 
         )
@@ -91,7 +105,7 @@ with DAG('dag-zh',
             task_id='Load_artist_dim_table',
             redshift_conn_id="redshift",
             table="artists",
-            sql_query=final_project_sql_statements.artist_table_insert,
+            sql_query=sql_.artist_table_insert,
             append_data=True
 
         )
@@ -99,7 +113,7 @@ with DAG('dag-zh',
             task_id='Load_time_dim_table',
             redshift_conn_id="redshift",
             table="time",
-            sql_query=final_project_sql_statements.time_table_insert,
+            sql_query=sql_.time_table_insert,
             append_data=True
         )
 
@@ -112,7 +126,8 @@ with DAG('dag-zh',
         end_operator = DummyOperator(task_id='Stop_execution')
 
         
-        create_songs >>  create_events >> start_operator
+        create_songs >>  create_events >> create_tables
+        create_tables >> start_operator
         start_operator >> stage_events_to_redshift
         start_operator >> stage_songs_to_redshift
         stage_events_to_redshift >> load_songplays_table
