@@ -7,7 +7,7 @@ from final_project_operators.stage_redshift import StageToRedshiftOperator
 from final_project_operators.load_fact import LoadFactOperator
 from final_project_operators.load_dimension import LoadDimensionOperator
 from final_project_operators.data_quality import DataQualityOperator
-from udacity.common import final_project_sql_statements
+from udacity.common import final_project_sql_statements, create_tables
 from airflow import DAG 
 default_args = {
     'owner': 'airflow-zh',
@@ -28,11 +28,10 @@ with DAG('dag-zh',
 
     def final_project():
 
-      ###TODO create tables
         create_trips_table = PostgresOperator(
-          task_id="create_trips_table",
+          task_id="create_tables",
           postgres_conn_id="redshift",
-          sql=create_tables_sql
+          sql=final_project_sql_statements.create_tables
       )
 
 
@@ -106,6 +105,8 @@ with DAG('dag-zh',
 
         end_operator = DummyOperator(task_id='Stop_execution')
 
+        
+        create_tables >> start_operator
         start_operator >> stage_events_to_redshift
         start_operator >> stage_songs_to_redshift
         stage_events_to_redshift >> load_songplays_table
