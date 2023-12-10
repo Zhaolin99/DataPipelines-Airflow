@@ -1,6 +1,7 @@
 from airflow.hooks.postgres_hook import PostgresHook
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
+from datetime import datetime, timedelta
 
 
 class DataQualityOperator(BaseOperator):
@@ -36,10 +37,10 @@ class DataQualityOperator(BaseOperator):
                 self.log.info(f"Query failed with exception: {e}")
             if exp_result != records[0]:
                 error_count += 1
-                failing_tests.append(sql)
-        if error_count > 0:
-            self.log.info('Tests failed')
-            self.log.info(failing_tests)
-            raise ValueError('Data quality check failed')
-        else:
-            self.log.info("All data quality checks passed")
+            failing_tests.append(sql)
+            if error_count > 0:
+                self.log.info('Tests failed')
+                self.log.info(failing_tests)
+                raise ValueError('Data quality check failed')
+            else:
+                self.log.info("All data quality checks passed")
