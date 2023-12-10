@@ -120,7 +120,10 @@ with DAG('dag-zh',
         run_quality_checks = DataQualityOperator(
             task_id='Run_data_quality_checks',
             redshift_conn_id="redshift",
-            tables=["users", "songs",  "artists", "time"]
+            dq_checks=[
+                    { 'check_sql': 'SELECT COUNT(*) FROM public.songplays WHERE userid IS NULL', 'expected_result': 0 }, 
+                    { 'check_sql': 'SELECT COUNT(DISTINCT "level") FROM public.songplays', 'expected_result': 2 },
+                        ]
         )
 
         end_operator = DummyOperator(task_id='Stop_execution')
