@@ -17,6 +17,8 @@ class DataQualityOperator(BaseOperator):
 
 
        super(DataQualityOperator, self).__init__(*args, **kwargs)
+       self.retries = 3
+       self.retry_delay = timedelta(minutes=5)
        self.redshift_conn_id = redshift_conn_id
        self.tables = tables
 
